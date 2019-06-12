@@ -27,6 +27,7 @@ def wordLookup(word):
 def gameLoop(startingWord, endingWord, wordSize):
     print("Current Word: " + startingWord + " Ending Word: " + endingWord)
     nextWord = input("Next Word: ")
+    verifyWord(nextWord, startingWord)
     # TODO: check if the nextWord is valid, assuming it is
     if nextWord == endingWord:
         print("wow, great job!")
