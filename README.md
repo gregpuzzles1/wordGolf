@@ -6,3 +6,5 @@ Utilized the NLTK to generate words, and a modified Levenshein distance to verif
 Example:
 
 COLD → CORD → CARD → WARD → WARM
+
+Requires NLTK Corpus
