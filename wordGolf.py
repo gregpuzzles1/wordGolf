@@ -1,86 +1,79 @@
 import random
 from nltk.corpus import words
+from typing import List
 
-wordList = words.words()
-wordSet = set(wordList) # use sets for membership lookup
-threeLetter = []
-fourLetter = []
-fiveLetter = []
-sixLetter = []
+# Load dictionary
+word_list = words.words()
+word_set = set(word_list)  # Use sets for fast lookup
 
-path = []
+# Categorize words by length
+word_buckets = {
+    3: [],
+    4: [],
+    5: [],
+    6: []
+}
 
-for word in wordSet:
-    if len(word) == 3:
-        threeLetter.append(word)
-    if len(word) == 4:
-        fourLetter.append(word)
-    if len(word) == 5:
-        fiveLetter.append(word)
-    if len(word) == 6:
-        sixLetter.append(word)
+for word in word_set:
+    word_len = len(word)
+    if word_len in word_buckets:
+        word_buckets[word_len].append(word.lower())
 
-def levenshteinSubs(w1, w2):
-    # length of w1 will always equal w2
-    previous_row = range(len(w2) + 1)
-
-    for i, c1 in enumerate(w1):
-        current_row = [i + 1]
-        for j, c2 in enumerate(w2):
-            substitutions = previous_row[j] + (c1 != c2)
-            current_row.append(substitutions)
-        previous_row = current_row
-
-    return previous_row[-1]
-
-def wordLookup(word):
-    if word in wordSet:
-        return True
-    else:
-        return False
-
-def verifyWord(nextWord, startingWord):
-    # verify that nextWord is a word & that nextWord is one step away from startingWord (Levenshtein Dist. with only subs)
-    if(wordLookup(nextWord) == True and levenshteinSubs(nextWord, startingWord) == 1):
-        return True
-    else:
-        return False
+# Track the path through the word ladder
+path: List[str] = []
 
 
-def gameLoop(startingWord, endingWord):
-    print("Current Word: " + startingWord + " Ending Word: " + endingWord)
-    nextWord = input("Next Word: ")
-    if verifyWord(nextWord, startingWord):
-        path.append(nextWord)
-        if nextWord == endingWord:
-            print("wow, great job!")
-            print("Path: " + str(path))
+def levenshtein_subs(w1: str, w2: str) -> int:
+    """Calculate Levenshtein distance using substitutions only."""
+    return sum(c1 != c2 for c1, c2 in zip(w1, w2))
+
+
+def is_valid_word(word: str) -> bool:
+    return word in word_set
+
+
+def is_valid_step(current: str, next_word: str) -> bool:
+    return (
+        is_valid_word(next_word) and
+        len(current) == len(next_word) and
+        levenshtein_subs(current, next_word) == 1
+    )
+
+
+def game_loop(current_word: str, target_word: str):
+    print(f"Current Word: {current_word} → Target Word: {target_word}")
+    next_word = input("Next Word: ").strip().lower()
+
+    if is_valid_step(current_word, next_word):
+        path.append(next_word)
+        if next_word == target_word:
+            print("\n🏁 Success! You reached the target word.")
+            print("🛤️  Path taken:", " → ".join(path))
         else:
-            gameLoop(nextWord, endingWord)
+            game_loop(next_word, target_word)
     else:
-        print("Invalid word, try again.")
-        gameLoop(startingWord, endingWord)
+        print("❌ Invalid word. Try again.\n")
+        game_loop(current_word, target_word)
 
 
-def setUp():
-    wordSize = int(input("Word Size: "))
-    if wordSize == 3:
-        startingWord = random.choice(threeLetter).lower()
-        path.append(startingWord)
-        endingWord = random.choice(threeLetter).lower()
-    if wordSize == 4:
-        startingWord = random.choice(fourLetter).lower()
-        path.append(startingWord)
-        endingWord = random.choice(fourLetter).lower()
-    if wordSize == 5:
-        startingWord = random.choice(fiveLetter).lower()
-        path.append(startingWord)
-        endingWord = random.choice(fiveLetter).lower()
-    if wordSize == 6:
-        startingWord = random.choice(sixLetter).lower()
-        path.append(startingWord)
-        endingWord = random.choice(sixLetter).lower()
+def setup_game():
+    try:
+        word_size = int(input("Enter word length (3-6): ").strip())
+        if word_size not in word_buckets:
+            raise ValueError
 
-    gameLoop(startingWord, endingWord)
+        start = random.choice(word_buckets[word_size])
+        end = random.choice(word_buckets[word_size])
+        while end == start:
+            end = random.choice(word_buckets[word_size])
 
-setUp()
+        path.clear()
+        path.append(start)
+        game_loop(start, end)
+    except ValueError:
+        print("❌ Please enter a valid number between 3 and 6.")
+        setup_game()
+
+
+if __name__ == "__main__":
+    setup_game()
